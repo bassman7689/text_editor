@@ -7,8 +7,7 @@
 #include "screen.h"
 
 int main() {
-    logger log;
-    initLogger(&log, "errorlog", LEVEL_INFO);
+    initLogger("errorlog", LEVEL_INFO);
 
     setupScreen();
 
@@ -18,7 +17,7 @@ int main() {
     if(!setStatusMessage(&b, "PRESS Ctrl-Q to Exit")) {
         destroyBuffer(&b);
         teardownScreen(&b);
-        destroyLogger(&log);
+        destroyLogger();
         exit(1);
     }
 
@@ -28,13 +27,13 @@ int main() {
 
     int running = 1;
     while(running) {
-        renderScreen(&b, &log);
+        renderScreen(&b);
         running = handleKeypress(&b);
     };
 
     destroyBuffer(&b);
     teardownScreen();
-    destroyLogger(&log);
+    destroyLogger();
 
     return 0;
 }

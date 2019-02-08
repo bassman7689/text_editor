@@ -3,14 +3,16 @@
 #include <string.h>
 
 #include "buffer.h"
-#include "cursor.h"
+#include "logger.h"
+#include "screen.h"
 
 void initBuffer(buffer *b) {
     b->status_message = NULL;
     b->lines = NULL;
     b->num_lines = 0;
     b->c = malloc(sizeof(cursor));
-    initCursor(b->c);
+    b->c->row = 0;
+    b->c->col = 0;
 }
 
 // TODO Make this work with empty buffer
@@ -33,6 +35,30 @@ void insertCharBuffer(buffer *b, char chr) {
     moveCursorBuffer(b, DIR_RIGHT);
 }
 
+void deleteCharBuffer(buffer *b) {
+    cursor *c = b->c;
+    char *cur_line = b->lines[c->row];
+    if (cur_line == NULL) {
+        return;
+    }
+
+    int line_len = strlen(cur_line);
+    if (line_len == 0) {
+        return;
+    }
+    cur_line = realloc(cur_line, (line_len) * sizeof(char));
+
+    memmove(cur_line + c->col - 1,
+            cur_line + c->col,
+            line_len - c->col + 1);
+
+    cur_line[line_len] = '\0';
+
+    b->lines[c->row] = cur_line;
+    moveCursorBuffer(b, DIR_LEFT);
+
+}
+
 void appendLineBuffer(buffer *b, char* line) {
     b->num_lines++;
     b->lines = realloc(b->lines, b->num_lines * sizeof(char*));
@@ -48,14 +74,40 @@ void appendLineBuffer(buffer *b, char* line) {
 
 void moveCursorBuffer(buffer *b, Dir direction) {
     cursor *c = b->c;
-    moveCursor(c, direction);
 
-    if (c->row > b->num_lines - 1) c->row = b->num_lines - 1;
-    else if (c->row < 0) c->row = 0;
+    switch (direction) {
+        case DIR_UP: c->row--;
+                     break;
 
-    int cur_row_len = strlen(b->lines[c->row]);
-    if (c->col > cur_row_len) c->col = cur_row_len;
-    else if (c->col < 0) c->col = 0;
+        case DIR_DOWN: c->row++;
+                       break;
+
+        case DIR_LEFT: c->col--;
+                       break;
+
+        case DIR_RIGHT: c->col++;
+                        break;
+    }
+
+    int screen_lines = LINES - STATUS_LINE_HEIGHT - 1;
+    int buffer_lines = b->num_lines - 1;
+    int min_lines = screen_lines < buffer_lines ? screen_lines : buffer_lines;
+
+    if (c->row < 0) {
+        c->row = 0;
+    } else if (c->row > screen_lines || c->row > buffer_lines)  {
+        c->row = min_lines;
+    }
+
+    int screen_cols = COLS - 1;
+    int buffer_cols = strlen(b->lines[c->row]);
+    int min_cols =  screen_cols < buffer_cols ? screen_cols : buffer_cols;
+
+    if (c->col < 0) {
+        c->col = 0;
+    } else if (c->col > screen_cols || c->col > buffer_cols) {
+        c->col = min_cols;
+    }
 }
 
 void destroyBuffer(buffer *b) {

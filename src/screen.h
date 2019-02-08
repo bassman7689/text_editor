@@ -11,6 +11,6 @@
 void setupScreen();
 void teardownScreen();
 
-void renderScreen(buffer *b, logger* log);
+void renderScreen(buffer *b);
 
 #endif

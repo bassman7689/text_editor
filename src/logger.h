@@ -15,8 +15,10 @@ typedef enum {
     LEVEL_ERR,
 } LogLevel;
 
-int initLogger(logger* log, char* filename, LogLevel level);
-void logInfo(logger* log, char* fmt, ...);
-void destroyLogger(logger* log);
+logger GlobalLogger;
+
+int initLogger(char* filename, LogLevel level);
+void logInfo(char* fmt, ...);
+void destroyLogger();
 
 #endif

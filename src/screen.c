@@ -29,11 +29,9 @@ static void renderStartupScreen() {
     }
 }
 
-void renderScreen(buffer *b, logger* log) {
+void renderScreen(buffer *b) {
     move(0, 0);
     clrtobot();
-
-    //logInfo(log, "cursor: (%d, %d)\n", b.c->row, b.c->col);
 
     if (b->lines) {
         renderBuffer(b);

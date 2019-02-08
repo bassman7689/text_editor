@@ -19,7 +19,8 @@ int handleKeypress(buffer *b) {
         case KEY_RIGHT:     moveCursorBuffer(b, DIR_RIGHT);
                             return TRUE;
 
-        case KEY_BACKSPACE: return TRUE;
+        case KEY_BACKSPACE: deleteCharBuffer(b);
+                            return TRUE;
 
         case KEY_ENTER:
         case '\n':          return TRUE;
