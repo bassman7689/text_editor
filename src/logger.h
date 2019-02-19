@@ -3,6 +3,11 @@
 
 #include <stdio.h>
 
+#ifndef LOG_LEVEL
+#define DEBUG
+#define LOG_LEVEL LEVEL_DEBUG
+#endif
+
 typedef struct {
     char* filename;
     FILE* fd;
@@ -17,7 +22,7 @@ typedef enum {
 
 logger GlobalLogger;
 
-int initLogger(char* filename, LogLevel level);
+int initLogger(char* filename);
 void logInfo(char* fmt, ...);
 void destroyLogger();
 

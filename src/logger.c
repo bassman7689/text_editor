@@ -5,7 +5,7 @@
 
 #include "logger.h"
 
-int initLogger(char* filename, LogLevel level) {
+int initLogger(char* filename) {
     int filename_len = strlen(filename);
     GlobalLogger.filename = calloc(filename_len + 1, sizeof(char));
     strncpy(GlobalLogger.filename, filename, filename_len);
@@ -24,8 +24,11 @@ void logInfo(char * fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
-    fprintf(GlobalLogger.fd, "INFO ");
-    vfprintf(GlobalLogger.fd, fmt, args);
+
+    if (LOG_LEVEL <= LEVEL_INFO) {
+	fprintf(GlobalLogger.fd, "INFO ");
+	vfprintf(GlobalLogger.fd, fmt, args);
+    }
     va_end(args);
 }
 

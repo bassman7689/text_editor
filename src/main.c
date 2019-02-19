@@ -7,7 +7,7 @@
 #include "screen.h"
 
 int main() {
-    initLogger("errorlog", LEVEL_INFO);
+    initLogger("errorlog");
 
     setupScreen();
 
