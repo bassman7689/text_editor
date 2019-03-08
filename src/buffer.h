@@ -2,25 +2,26 @@
 #define BUFFER_H
 
 typedef struct {
-    int row, col;
+	int row, col;
 } cursor;
 
 typedef enum {
-    DIR_UP,
-    DIR_DOWN,
-    DIR_LEFT,
-    DIR_RIGHT
+	DIR_UP,
+	DIR_DOWN,
+	DIR_LEFT,
+	DIR_RIGHT
 } Dir;
 
 
 typedef struct {
-    cursor* c;
-    char *status_message;
-    char **lines;
-    int num_lines;
+	cursor* c;
+	char *status_message;
+	char **lines;
+	int num_lines;
 } buffer;
 
 void initBuffer(buffer *b);
+void newLineBuffer(buffer *b);
 void moveCursorBuffer(buffer *b, Dir direction);
 void insertCharBuffer(buffer *b, char chr);
 void deleteCharBuffer(buffer *b);
