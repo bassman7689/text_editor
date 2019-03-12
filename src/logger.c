@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <ncurses.h>
+
 #include "logger.h"
 
 int initLogger(char* filename)
@@ -29,8 +31,11 @@ void logInfo(char * fmt, ...)
 	if (LOG_LEVEL <= LEVEL_INFO) {
 		fprintf(GlobalLogger.fd, "INFO ");
 		vfprintf(GlobalLogger.fd, fmt, args);
+		if (fmt[strlen(fmt) - 1] != '\n')
+			fprintf(GlobalLogger.fd, "%s", "\n");
 	}
 	va_end(args);
+	fflush(GlobalLogger.fd);
 }
 
 void destroyLogger()

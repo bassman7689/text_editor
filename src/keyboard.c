@@ -1,27 +1,29 @@
 #include <ctype.h>
 #include <ncurses.h>
 
-#include "buffer.H"
+#include "buffer.h"
 #include "keyboard.h"
+#include "logger.h"
 
 int handleKeypress(buffer *b)
 {
 	int ch = getch();
 	switch (ch) {
 	case CTRL_KEY('q'):
+		debugLogBuffer(b);
 		return FALSE;
 
 	case KEY_UP:
-		moveCursorBuffer(b, DIR_UP);
+		moveCursorBuffer(b, b->c->row - 1, b->c->col);
 		return TRUE;
 	case KEY_DOWN:
-		moveCursorBuffer(b, DIR_DOWN);
+		moveCursorBuffer(b, b->c->row + 1, b->c->col);
 		return TRUE;
 	case KEY_LEFT:
-		moveCursorBuffer(b, DIR_LEFT);
+		moveCursorBuffer(b, b->c->row, b->c->col - 1);
 		return TRUE;
 	case KEY_RIGHT:
-		moveCursorBuffer(b, DIR_RIGHT);
+		moveCursorBuffer(b, b->c->row, b->c->col + 1);
 		return TRUE;
 
 	case KEY_BACKSPACE:
@@ -30,8 +32,7 @@ int handleKeypress(buffer *b)
 
 	case KEY_ENTER:
 	case '\n':
-		newLineBuffer(b);
-		moveCursorBuffer(b, DIR_DOWN);
+		newLineAtCursorBuffer(b);
 		return TRUE;
 
 	case '\r':

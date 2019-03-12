@@ -16,11 +16,19 @@ void initBuffer(buffer *b)
 	b->c->col = 0;
 }
 
-void newLineBuffer(buffer *b)
+void insertLineBuffer(buffer *b, int row)
 {
-	b->num_lines++;
-	b->lines = realloc(b->lines, b->num_lines * sizeof(char *));
-	b->lines[b->num_lines - 1] = calloc(1, sizeof(char));
+    if (row > b->num_lines)
+	    row = b->num_lines;
+
+    b->lines = realloc(b->lines, sizeof(char*) * b->num_lines+1);
+
+    if (row != b->num_lines) {
+	memmove(b->lines + row + 1, b->lines + row, sizeof(char*) * (b->num_lines - row));
+    }
+    b->lines[row] = calloc(1, sizeof(char));
+    b->lines[row][0] = '\0';
+    b->num_lines++;
 }
 
 void insertCharBuffer(buffer *b, char chr)
@@ -28,7 +36,7 @@ void insertCharBuffer(buffer *b, char chr)
 	int row = b->c->row;
 
 	if (!b->lines)
-		newLineBuffer(b);
+	        insertLineBuffer(b, b->num_lines);
 
 	char *cur_line = b->lines[row];
 	int line_len = cur_line ? strlen(cur_line) : 0;
@@ -43,12 +51,16 @@ void insertCharBuffer(buffer *b, char chr)
 	cur_line[line_len + 1] = '\0';
 
 	b->lines[row] = cur_line;
-	moveCursorBuffer(b, DIR_RIGHT);
+	moveCursorBuffer(b, b->c->row, b->c->col + 1);
 }
 
 void deleteCharBuffer(buffer *b)
 {
 	cursor *c = b->c;
+
+	// TODO handle joining lines
+	if (c->col == 0) return;
+
 	char *cur_line = b->lines[c->row];
 	if (cur_line == NULL) {
 		return;
@@ -58,6 +70,7 @@ void deleteCharBuffer(buffer *b)
 	if (line_len == 0) {
 		return;
 	}
+
 	cur_line = realloc(cur_line, (line_len) * sizeof(char));
 
 	memmove(cur_line + c->col - 1,
@@ -67,13 +80,53 @@ void deleteCharBuffer(buffer *b)
 	cur_line[line_len] = '\0';
 
 	b->lines[c->row] = cur_line;
-	moveCursorBuffer(b, DIR_LEFT);
+	moveCursorBuffer(b, b->c->row, b->c->col - 1);
 
+}
+
+void insertLineAtCursorBuffer(buffer *b, char* line)
+{
+    if (b->c->row + 1 > b->num_lines) return;
+
+    insertLineBuffer(b, b->c->row + 1);
+
+    int line_len = strlen(line);
+    char* tmp = calloc(line_len + 1, sizeof(char));
+    strncpy(tmp, line, line_len);
+    tmp[line_len] = '\0';
+
+    b->lines[b->c->row + 1] = tmp;
+}
+
+void newLineAtCursorBuffer(buffer *b)
+{
+    if (b->c->row > b->num_lines - 1) {
+	insertLineBuffer(b, b->num_lines);
+	return;
+    }
+
+    char * cur_line = b->lines[b->c->row];
+
+    int line_len = strlen(cur_line);
+
+    char * cur_pos;
+    if (b->c->col > line_len - 1) {
+	    insertLineAtCursorBuffer(b, "");
+	    moveCursorBuffer(b, b->c->row + 1, 0);
+	    return;
+    } else {
+	    cur_pos = cur_line + b->c->col;
+	    insertLineAtCursorBuffer(b, cur_pos);
+	    int new_line_len = b->c->col;
+	    b->lines[b->c->row] = realloc(b->lines[b->c->row], (new_line_len + 1) * sizeof(char));
+	    b->lines[b->c->row][new_line_len] = '\0';
+	    moveCursorBuffer(b, b->c->row + 1, 0);
+    }
 }
 
 void appendLineBuffer(buffer *b, char* line)
 {
-	newLineBuffer(b);
+        insertLineBuffer(b, b->num_lines);
 
 	int line_len = strlen(line);
 	char* tmp = calloc(line_len + 1, sizeof(char));
@@ -84,23 +137,12 @@ void appendLineBuffer(buffer *b, char* line)
 	b->lines[cur_idx] = tmp;
 }
 
-void moveCursorBuffer(buffer *b, Dir direction)
+void moveCursorBuffer(buffer *b, int row, int col)
 {
 	cursor *c = b->c;
 
-	switch (direction) {
-        case DIR_UP: c->row--;
-		break;
-
-        case DIR_DOWN: c->row++;
-		break;
-
-        case DIR_LEFT: c->col--;
-		break;
-
-        case DIR_RIGHT: c->col++;
-		break;
-	}
+	c->row = row;
+	c->col = col;
 
 	int screen_lines = LINES - STATUS_LINE_HEIGHT - 1;
 	int buffer_lines = b->num_lines - 1;
@@ -160,4 +202,11 @@ int setStatusMessage(buffer *b, char *msg)
 	// strncpy may not do this, doing it for safety.
 	b->status_message[msgLen] = '\0';
 	return 1;
+}
+
+void debugLogBuffer(buffer* b)
+{
+	for (int i = 0; i < b->num_lines; i++) {
+	    logInfo("\"%.*s\"\n", COLS, b->lines[i]);
+	}
 }
